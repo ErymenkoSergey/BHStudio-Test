@@ -3,16 +3,20 @@ using HBStudio.Test.Other;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+public enum Controls
+{
+    None = 0,
+    Bounce = 1,
+    Up = 2,
+    Down = 3,
+    Left = 4,
+    Right = 5
+}
+
 namespace HBStudio.Test.Mechanics.Inputs
 {
     public class InputControl : CommonBehaviour
     {
-        public void SetPlayer(GameObject player)
-        {
-            _player = player;
-            SetPlayer();
-        }
-
         [SerializeField] private GameObject _player;
         private IMoveble _iMoveblePlayer;
 
@@ -37,6 +41,21 @@ namespace HBStudio.Test.Mechanics.Inputs
         private void OnDisable()
         {
             UnSubscribe();
+        }
+
+        public void SetPlayer(GameObject player)
+        {
+            _player = player;
+            SetPlayer();
+        }
+
+        private void SetPlayer()
+        {
+            if (_player.gameObject.TryGetComponent(out IMoveble moveble))
+            {
+                _iMoveblePlayer = moveble;
+                _isPlayerOn = true;
+            }
         }
 
         private void SetLinks()
@@ -69,15 +88,6 @@ namespace HBStudio.Test.Mechanics.Inputs
 
             _playerActionMap.Enable();
             _inputActions.Enable();
-        }
-
-        public void SetPlayer()
-        {
-            if (_player.gameObject.TryGetComponent(out IMoveble moveble))
-            {
-                _iMoveblePlayer = moveble;
-                _isPlayerOn = true;
-            }
         }
 
         private void UnSubscribe()
@@ -154,7 +164,6 @@ namespace HBStudio.Test.Mechanics.Inputs
 
             var pos = Context.ReadValue<Vector2>();
             _iMoveblePlayer.Rotate(pos);
-
         }
 
         private void Bounce(InputAction.CallbackContext Context)
@@ -162,14 +171,4 @@ namespace HBStudio.Test.Mechanics.Inputs
             _iMoveblePlayer.Bounce();
         }
     }
-}
-
-public enum Controls
-{
-    None = 0,
-    Shoot = 1,
-    Up = 2,
-    Down = 3,
-    Left = 4,
-    Right = 5
 }

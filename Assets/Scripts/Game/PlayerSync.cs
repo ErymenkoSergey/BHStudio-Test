@@ -4,10 +4,11 @@ using System.Collections;
 using TMPro;
 using HBStudio.Test.Mechanics.NetWork;
 using HBStudio.Test.Data;
+using HBStudio.Test.Interface;
 
 namespace HBStudio.Test.Mechanics.Character
 {
-    public class PlayerSync : BaseCharacter
+    public class PlayerSync : BaseCharacter, IMoveble
     {
         [SyncVar(hook = nameof(UpdatePlayerName))] public string PlayerName;
         [SyncVar(hook = nameof(UpdateHitCount))] public int HitCount = 0;
@@ -27,14 +28,11 @@ namespace HBStudio.Test.Mechanics.Character
         [SerializeField] private bool _isPushAway;
 
         [SerializeField] private float _rotationSpeed;
-        [SerializeField] private float _jumpSpeed;
         [SerializeField] private float _moveSpeed;
         [SerializeField] private float _turnSensitivity;
 
         private bool _enemyDetected;
         private float _dashTimeDetected = 1f;
-        private bool _isGrounded = true;
-        private bool isFail;
         private float _horizontal;
         private float _vertical;
         private Vector3 _direction;
@@ -57,9 +55,12 @@ namespace HBStudio.Test.Mechanics.Character
 
         private GameNetConfigurator SetReferences()
         {
-            SceneObserver observer = FindObjectOfType<SceneObserver>(); //I would fix it with an injection (Zenject)
+            SceneObserver observer = FindObjectOfType<SceneObserver>();
+
             _sceneObserver = observer;
             _cinemachine = observer.GetCinemachine();
+            var input = observer.GetInput();
+            input.SetPlayer(gameObject);
             var _netConfigurator = observer.GetGameNetConfigurator();
 
             return _netConfigurator;
@@ -70,36 +71,6 @@ namespace HBStudio.Test.Mechanics.Character
             _dashDistance = configuration.JerkDistance;
             _durationInvincibilityMode = configuration.DurationInvincibilityMode;
             _winsToWin = configuration.CountWinsToWin;
-        }
-
-        private void Update()
-        {
-            if (!isOwned)
-                return;
-
-            if (!isLocalPlayer)
-                return;
-
-            if (Input.GetMouseButtonDown(0))
-                StartCoroutine(Dash());
-
-            _horizontal = Input.GetAxis("Horizontal");
-            _vertical = Input.GetAxis("Vertical");
-
-            _isGrounded = _characterController.isGrounded;
-
-            if (_isGrounded)
-                isFail = false;
-
-            if ((_isGrounded || !isFail) && _jumpSpeed < 1f && Input.GetKey(KeyCode.Space))
-            {
-                _jumpSpeed = Mathf.Lerp(_jumpSpeed, 4f, 0.5f);
-            }
-            else if (!_isGrounded)
-            {
-                isFail = true;
-                _jumpSpeed = 0;
-            }
         }
 
         private void FixedUpdate()
@@ -113,16 +84,25 @@ namespace HBStudio.Test.Mechanics.Character
             if (!isLocalPlayer || _characterController == null || !_characterController.enabled)
                 return;
 
-            Vector3 direction = new Vector3(_horizontal, _jumpSpeed, _vertical);
+            Vector3 direction = new Vector3(_horizontal, 0, _vertical);
             direction = Vector3.ClampMagnitude(direction, 1f);
             direction = transform.TransformDirection(direction);
             direction *= _moveSpeed;
             _direction = direction;
 
-            if (_jumpSpeed > 0)
-                _characterController.Move(direction * Time.fixedDeltaTime);
+            _characterController.SimpleMove(direction);
+
+            if (direction.magnitude > 0.1f)
+            {
+                SetAnimatorStatus("State", 1);
+            }
             else
-                _characterController.SimpleMove(direction);
+                SetAnimatorStatus("State", 0);
+        }
+
+        public void SetAnimatorStatus(string name, int value)
+        {
+            _animator.SetInteger(name, value);
         }
 
         private void OnControllerColliderHit(ControllerColliderHit hit)
@@ -180,6 +160,7 @@ namespace HBStudio.Test.Mechanics.Character
             while (Vector3.Distance(transform.position, currentPosition) < _dashDistance && IsDashing)
             {
                 _characterController.Move(_moveSpeed * 2f * Time.deltaTime * _direction);
+                SetAnimatorStatus("State", 5);
                 yield return null;
             }
 
@@ -266,7 +247,7 @@ namespace HBStudio.Test.Mechanics.Character
         private void SetInvincibilityMode(bool isOn)
         {
             IsInvincibilityMode = isOn;
-            SetColor(isOn ? Color.red : Color.blue);
+            SetColor(isOn ? Color.grey : Color.blue);
         }
 
         private IEnumerator SetDamageStatus()
@@ -304,6 +285,47 @@ namespace HBStudio.Test.Mechanics.Character
             {
                 _sceneObserver.Winn(this);
             }
+        }
+
+        public void Move(Controls controls, bool isOn)
+        {
+            switch (controls)
+            {
+                case Controls.Up:
+                    if (isOn)
+                        _vertical = 1f;
+                    else
+                        _vertical = 0f;
+                    break;
+                case Controls.Down:
+                    if (isOn)
+                        _vertical = -1f;
+                    else
+                        _vertical = 0f;
+                    break;
+                case Controls.Left:
+                    if (isOn)
+                        _horizontal = -1f;
+                    else
+                        _horizontal = 0f;
+                    break;
+                case Controls.Right:
+                    if (isOn)
+                        _horizontal = 1f;
+                    else
+                        _horizontal = 0f;
+                    break;
+            }
+        }
+
+        public void Rotate(Vector2 vector)
+        {
+            //Debug.Log($"Inputs Rotate {vector}");
+        }
+
+        public void Bounce()
+        {
+            StartCoroutine(Dash());
         }
     }
 }
