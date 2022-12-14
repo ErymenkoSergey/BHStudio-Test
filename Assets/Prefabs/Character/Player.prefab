@@ -1650,7 +1650,7 @@ CharacterController:
   m_GameObject: {fileID: 9168110672192944854}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_Height: 1.4
   m_Radius: 0.17
@@ -1759,9 +1759,9 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0
   target: {fileID: 8390343237641396332}
-  clientAuthority: 1
+  clientAuthority: 0
   onlySyncOnChange: 1
-  bufferResetMultiplier: 2
+  bufferResetMultiplier: 5
   positionSensitivity: 0.01
   rotationSensitivity: 0.01
   scaleSensitivity: 0.01
@@ -1770,4 +1770,4 @@ MonoBehaviour:
   syncScale: 0
   showGizmos: 0
   showOverlay: 0
-  overlayColor: {r: 1, g: 0, b: 0, a: 0.5}
+  overlayColor: {r: 0, g: 0, b: 0, a: 0.5}

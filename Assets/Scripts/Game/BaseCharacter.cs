@@ -15,7 +15,6 @@ namespace HBStudio.Test.Mechanics.Character
         [SerializeField] protected SkinnedMeshRenderer _meshRenderer;
         [SerializeField] protected Camera _camera;
         [SerializeField] protected Transform _cameraPosition;
-        [SerializeField] protected NetworkTransform _networkTransform;
 
         protected SceneObserver _sceneObserver;
     }
