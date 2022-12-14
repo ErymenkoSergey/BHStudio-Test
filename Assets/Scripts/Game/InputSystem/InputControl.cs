@@ -6,7 +6,9 @@ using UnityEngine.InputSystem;
 public enum Controls
 {
     None = 0,
+
     Bounce = 1,
+
     Up = 2,
     Down = 3,
     Left = 4,

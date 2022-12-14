@@ -1,4 +1,3 @@
-using Cinemachine;
 using HBStudio.Test.Mechanics.Character;
 using HBStudio.Test.Mechanics.Inputs;
 using HBStudio.Test.Other;
@@ -11,7 +10,7 @@ namespace HBStudio.Test.Mechanics.NetWork
 {
     public sealed class SceneObserver : CommonBehaviour
     {
-        [SerializeField] private CinemachineFreeLook _cinemachineFreeLook;
+        [SerializeField] private Camera _camera;
         [SerializeField] private GameNetConfigurator _netConfigurator;
         [SerializeField] private GameUI _gameUI;
         [SerializeField] private InputControl _inputControl;
@@ -37,9 +36,9 @@ namespace HBStudio.Test.Mechanics.NetWork
             return _netConfigurator;
         }
 
-        public CinemachineFreeLook GetCinemachine()
+        public Camera GetCamera()
         {
-            return _cinemachineFreeLook;
+            return _camera;
         }
 
         public void Winn(PlayerSync myPlayer)

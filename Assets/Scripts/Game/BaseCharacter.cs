@@ -1,4 +1,3 @@
-using Cinemachine;
 using HBStudio.Test.Mechanics.NetWork;
 using Mirror;
 using UnityEngine;
@@ -14,8 +13,10 @@ namespace HBStudio.Test.Mechanics.Character
         [SerializeField] protected CharacterController _characterController;
         [SerializeField] protected Animator _animator;
         [SerializeField] protected SkinnedMeshRenderer _meshRenderer;
+        [SerializeField] protected Camera _camera;
+        [SerializeField] protected Transform _cameraPosition;
+        [SerializeField] protected NetworkTransform _networkTransform;
 
-        protected CinemachineFreeLook _cinemachine;
         protected SceneObserver _sceneObserver;
     }
 }

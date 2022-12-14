@@ -24,17 +24,18 @@ namespace HBStudio.Test.Mechanics.Character
         [SerializeField] private float _dashDistance;
         [SerializeField] private int _winsToWin;
 
-        [SerializeField] private float _turnSmoothTime = 0.01f;
         [SerializeField] private bool _isPushAway;
 
         [SerializeField] private float _rotationSpeed;
         [SerializeField] private float _moveSpeed;
-        [SerializeField] private float _turnSensitivity;
+
+        private float _sensitivityCamera = 0.25f;
+        private Vector3 _mousePosition = new Vector3(255, 255, 255);
 
         private bool _enemyDetected;
         private float _dashTimeDetected = 1f;
-        private float _horizontal;
-        private float _vertical;
+        private float _horizontalMoved;
+        private float _verticalMoved;
         private Vector3 _direction;
 
         public override void OnStartLocalPlayer()
@@ -45,12 +46,6 @@ namespace HBStudio.Test.Mechanics.Character
 
             if (isClient && isOwned)
                 CmdSetPlayerName(players.GetName());
-
-            if (isOwned)
-            {
-                _cinemachine.Follow = transform;
-                _cinemachine.LookAt = transform;
-            }
         }
 
         private GameNetConfigurator SetReferences()
@@ -58,7 +53,11 @@ namespace HBStudio.Test.Mechanics.Character
             SceneObserver observer = FindObjectOfType<SceneObserver>();
 
             _sceneObserver = observer;
-            _cinemachine = observer.GetCinemachine();
+
+            _camera = observer.GetCamera();
+            _camera.transform.SetParent(_cameraPosition);
+            _camera.transform.localPosition = Vector3.zero;
+
             var input = observer.GetInput();
             input.SetPlayer(gameObject);
             var _netConfigurator = observer.GetGameNetConfigurator();
@@ -78,13 +77,10 @@ namespace HBStudio.Test.Mechanics.Character
             if (!isOwned)
                 return;
 
-            if (_cinemachine != null)
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0f, _cinemachine.m_XAxis.Value, 0f), _rotationSpeed * Time.deltaTime);
-
             if (!isLocalPlayer || _characterController == null || !_characterController.enabled)
                 return;
 
-            Vector3 direction = new Vector3(_horizontal, 0, _vertical);
+            Vector3 direction = new Vector3(_horizontalMoved, 0, _verticalMoved);
             direction = Vector3.ClampMagnitude(direction, 1f);
             direction = transform.TransformDirection(direction);
             direction *= _moveSpeed;
@@ -157,14 +153,17 @@ namespace HBStudio.Test.Mechanics.Character
 
             Vector3 currentPosition = transform.position;
 
+            SetAnimatorStatus("State", 5);
+
             while (Vector3.Distance(transform.position, currentPosition) < _dashDistance && IsDashing)
             {
                 _characterController.Move(_moveSpeed * 2f * Time.deltaTime * _direction);
-                SetAnimatorStatus("State", 5);
                 yield return null;
             }
 
-            yield return new WaitForSeconds(_dashTimeDetected / 2);
+            yield return new WaitForSeconds(_dashTimeDetected);
+
+            SetAnimatorStatus("State", 1);
 
             if (!IsInvincibilityMode)
                 CmdSetColor(Color.white);
@@ -240,11 +239,11 @@ namespace HBStudio.Test.Mechanics.Character
         [Command]
         private void CmdSetInvincibilityMode(bool isOn)
         {
-            SetInvincibilityMode(isOn);
+            RcpSetInvincibilityMode(isOn);
         }
 
         [Server]
-        private void SetInvincibilityMode(bool isOn)
+        private void RcpSetInvincibilityMode(bool isOn)
         {
             IsInvincibilityMode = isOn;
             SetColor(isOn ? Color.grey : Color.blue);
@@ -253,14 +252,14 @@ namespace HBStudio.Test.Mechanics.Character
         private IEnumerator SetDamageStatus()
         {
             if (isServer)
-                SetInvincibilityMode(true);
+                RcpSetInvincibilityMode(true);
             else
                 CmdSetInvincibilityMode(true);
 
             yield return new WaitForSeconds(_durationInvincibilityMode);
 
             if (isServer)
-                SetInvincibilityMode(false);
+                RcpSetInvincibilityMode(false);
             else
                 CmdSetInvincibilityMode(false);
         }
@@ -289,42 +288,52 @@ namespace HBStudio.Test.Mechanics.Character
 
         public void Move(Controls controls, bool isOn)
         {
+            if (!isLocalPlayer)
+                return;
+
             switch (controls)
             {
                 case Controls.Up:
-                    if (isOn)
-                        _vertical = 1f;
-                    else
-                        _vertical = 0f;
+                    _verticalMoved = isOn ? 1f : 0f;
                     break;
                 case Controls.Down:
-                    if (isOn)
-                        _vertical = -1f;
-                    else
-                        _vertical = 0f;
+                    _verticalMoved = isOn ? -1f : 0f;
                     break;
                 case Controls.Left:
-                    if (isOn)
-                        _horizontal = -1f;
-                    else
-                        _horizontal = 0f;
+                    _horizontalMoved = isOn ? -1f : 0f;
                     break;
                 case Controls.Right:
-                    if (isOn)
-                        _horizontal = 1f;
-                    else
-                        _horizontal = 0f;
+                    _horizontalMoved = isOn ? 1f : 0f;
                     break;
             }
         }
 
         public void Rotate(Vector2 vector)
         {
-            //Debug.Log($"Inputs Rotate {vector}");
+            if (!isLocalPlayer || !isOwned)
+                return;
+
+            RotateBody(vector);
+            RotateCamera(vector);
+        }
+
+        private void RotateCamera(Vector2 vector)
+        {
+            _mousePosition = new Vector3(-vector.y * (_sensitivityCamera / 5f), vector.x * (_sensitivityCamera / 5f), 0);
+            _mousePosition = new Vector3(_mousePosition.x, 0, 0);
+            _camera.transform.localEulerAngles = _mousePosition;
+        }
+
+        private void RotateBody(Vector2 vector)
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0f, vector.x * _sensitivityCamera, 0f), _rotationSpeed * Time.deltaTime);
         }
 
         public void Bounce()
         {
+            if (!isLocalPlayer)
+                return;
+
             StartCoroutine(Dash());
         }
     }

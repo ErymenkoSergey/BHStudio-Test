@@ -338,7 +338,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7590896486167686272, guid: d5015a965e43fcd4fb723e267d766226, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7590896486167686272, guid: d5015a965e43fcd4fb723e267d766226, type: 3}
       propertyPath: m_LocalPosition.z
@@ -381,6 +381,11 @@ PrefabInstance:
 --- !u!4 &184057279 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7590896486167686272, guid: d5015a965e43fcd4fb723e267d766226, type: 3}
+  m_PrefabInstance: {fileID: 184057278}
+  m_PrefabAsset: {fileID: 0}
+--- !u!20 &184057280 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 7590896486167686279, guid: d5015a965e43fcd4fb723e267d766226, type: 3}
   m_PrefabInstance: {fileID: 184057278}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &305159984
@@ -2361,6 +2366,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerCamera
       objectReference: {fileID: 0}
+    - target: {fileID: 8674417391077122705, guid: ee93e81cab7aa7f44bbbf83bb4e8bcfb, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8674417391077122735, guid: ee93e81cab7aa7f44bbbf83bb4e8bcfb, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -2809,6 +2818,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cinemachineFreeLook: {fileID: 1559843777}
+  _camera: {fileID: 184057280}
   _netConfigurator: {fileID: 0}
   _gameUI: {fileID: 1577460136}
   _inputControl: {fileID: 497108312}
