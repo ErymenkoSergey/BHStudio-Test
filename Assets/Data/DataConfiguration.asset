@@ -15,4 +15,4 @@ MonoBehaviour:
   _configuration:
     JerkDistance: 12
     DurationInvincibilityMode: 3
-    CountWinsToWin: 5
+    CountWinsToWin: 4

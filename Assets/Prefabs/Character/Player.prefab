@@ -1627,18 +1627,16 @@ MonoBehaviour:
   _meshRenderer: {fileID: 6791366856985258646}
   _camera: {fileID: 0}
   _cameraPosition: {fileID: 6597646114819953201}
-  _networkTransform: {fileID: 2953806456278297156}
   PlayerName: 
-  HitCount: 0
+  Score: 0
   PlayerColor: {r: 0, g: 0, b: 0, a: 0}
   IsInvincibilityMode: 0
   IsDashing: 0
   _playerNameText: {fileID: 8612289264774511826}
   _playerScoreText: {fileID: 3744888760831468547}
-  _durationInvincibilityMode: 1
-  _dashDistance: 1
-  _winsToWin: 1
-  _isPushAway: 0
+  _durationInvincibilityMode: 3
+  _dashDistance: 12
+  _winsToWin: 4
   _rotationSpeed: 10
   _moveSpeed: 8
 --- !u!143 &5986323447015434104
