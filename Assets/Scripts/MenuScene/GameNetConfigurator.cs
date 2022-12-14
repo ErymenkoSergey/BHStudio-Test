@@ -30,7 +30,11 @@ namespace HBStudio.Test.Mechanics.NetWork
         public void TransferPlayer(GameObject player)
         {
             _playerSync = player.GetComponent<PlayerSync>();
-            _playerSync.SetData(_dataConfiguration.Configuration);
+        }
+
+        public Configuration GetConfiguration()
+        {
+            return _dataConfiguration.Configuration;
         }
     }
 }

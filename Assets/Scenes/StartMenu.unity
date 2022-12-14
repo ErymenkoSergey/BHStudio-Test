@@ -854,7 +854,7 @@ MonoBehaviour:
   _continueButton: {fileID: 899398645}
   _quitButton: {fileID: 545142957}
   _inputPanel: {fileID: 699839200}
-  _isLockMouse: 0
+  _isLockMouse: 1
   _gameNetConfigurator: {fileID: 94463578}
 --- !u!1 &899398643
 GameObject:

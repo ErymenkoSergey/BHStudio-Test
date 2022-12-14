@@ -8,7 +8,7 @@ using HBStudio.Test.Interface;
 
 namespace HBStudio.Test.Mechanics.Character
 {
-    public class PlayerSync : BaseCharacter, IMoveble
+    public sealed class PlayerSync : BaseCharacter, IMoveble
     {
         [SyncVar(hook = nameof(UpdatePlayerName))] public string PlayerName;
         [SyncVar(hook = nameof(UpdateHitCount))] public int HitCount = 0;
@@ -42,10 +42,11 @@ namespace HBStudio.Test.Mechanics.Character
         {
             _characterController.enabled = true;
 
-            var players = SetReferences();
-
             if (isClient && isOwned)
+            {
+                var players = SetReferences();
                 CmdSetPlayerName(players.GetName());
+            }
         }
 
         private GameNetConfigurator SetReferences()
@@ -53,7 +54,7 @@ namespace HBStudio.Test.Mechanics.Character
             SceneObserver observer = FindObjectOfType<SceneObserver>();
 
             _sceneObserver = observer;
-
+            SetData(observer.GetGameNetConfigurator().GetConfiguration());
             _camera = observer.GetCamera();
             _camera.transform.SetParent(_cameraPosition);
             _camera.transform.localPosition = Vector3.zero;
@@ -65,7 +66,7 @@ namespace HBStudio.Test.Mechanics.Character
             return _netConfigurator;
         }
 
-        public void SetData(Configuration configuration)
+        private void SetData(Configuration configuration)
         {
             _dashDistance = configuration.JerkDistance;
             _durationInvincibilityMode = configuration.DurationInvincibilityMode;
@@ -126,7 +127,8 @@ namespace HBStudio.Test.Mechanics.Character
                     else
                         CmdAddHitCount();
                 }
-                else if (hit.gameObject.GetComponent<PlayerSync>().IsDashing)
+
+                if (hit.gameObject.GetComponent<PlayerSync>().IsDashing)
                 {
                     StartCoroutine(SetDamageStatus());
                 }
@@ -196,7 +198,7 @@ namespace HBStudio.Test.Mechanics.Character
             var time = Time.time;
             _isPushAway = true;
 
-            while (Time.time - time < 0.05f)
+            while (Time.time - time < 0.5f)
             {
                 _characterController.Move(_direction);
 
@@ -280,7 +282,7 @@ namespace HBStudio.Test.Mechanics.Character
         {
             _playerScoreText.text = $"Score: {newScore}";
 
-            if (_winsToWin == newScore)
+            if (_winsToWin >= newScore)
             {
                 _sceneObserver.Winn(this);
             }
