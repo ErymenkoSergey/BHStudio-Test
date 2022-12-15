@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace HBStudio.Test.Data
+namespace BHStudio.Test.Data
 {
     [CreateAssetMenu(menuName = "Data")]
     public class DataConfiguration : ScriptableObject

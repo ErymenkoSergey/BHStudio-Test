@@ -2,9 +2,9 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using Mirror;
-using HBStudio.Test.Other;
+using BHStudio.Test.Other;
 
-namespace HBStudio.Test.UI
+namespace BHStudio.Test.UI
 {
     public class UIMenu : CommonBehaviour
     {

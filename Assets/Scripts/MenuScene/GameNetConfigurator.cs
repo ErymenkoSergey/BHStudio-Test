@@ -1,10 +1,10 @@
 using UnityEngine;
 using Mirror;
-using HBStudio.Test.Data;
-using HBStudio.Test.Other;
-using HBStudio.Test.Mechanics.Character;
+using BHStudio.Test.Data;
+using BHStudio.Test.Other;
+using BHStudio.Test.Mechanics.Character;
 
-namespace HBStudio.Test.Mechanics.NetWork
+namespace BHStudio.Test.Mechanics.NetWork
 {
     public sealed class GameNetConfigurator : CommonBehaviour, INetConfigurable
     {

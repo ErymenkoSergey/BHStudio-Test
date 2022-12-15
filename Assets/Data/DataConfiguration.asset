@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: DataConfiguration
   m_EditorClassIdentifier: 
   _configuration:
-    JerkDistance: 12
+    JerkDistance: 13
     DurationInvincibilityMode: 3
-    CountWinsToWin: 4
+    CountWinsToWin: 3

@@ -1,12 +1,11 @@
-using HBStudio.Test.Mechanics.Character;
-using HBStudio.Test.Mechanics.Inputs;
-using HBStudio.Test.Other;
-using HBStudio.Test.UI;
+using BHStudio.Test.Mechanics.Inputs;
+using BHStudio.Test.Other;
+using BHStudio.Test.UI;
 using Mirror;
 using System.Collections;
 using UnityEngine;
 
-namespace HBStudio.Test.Mechanics.NetWork
+namespace BHStudio.Test.Mechanics.NetWork
 {
     public sealed class SceneObserver : CommonBehaviour
     {
@@ -14,7 +13,7 @@ namespace HBStudio.Test.Mechanics.NetWork
         [SerializeField] private GameNetConfigurator _netConfigurator;
         [SerializeField] private GameUI _gameUI;
         [SerializeField] private InputControl _inputControl;
-        [SerializeField] private float _timeWaitWin = 15f;
+        [SerializeField] private float _timeWaitWin = 5f;
 
         private void Awake()
         {
@@ -51,7 +50,6 @@ namespace HBStudio.Test.Mechanics.NetWork
 
         public IEnumerator WinTimer()
         {
-            Debug.Log($"WinTimer Start, Wait: {_timeWaitWin} seconds ");
             yield return new WaitForSeconds(_timeWaitWin);
             NetworkManager.singleton.ServerChangeScene(NetworkManager.networkSceneName);
         }

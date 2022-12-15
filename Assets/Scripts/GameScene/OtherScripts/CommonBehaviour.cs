@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace HBStudio.Test.Other
+namespace BHStudio.Test.Other
 {
     public class CommonBehaviour : MonoBehaviour
     {

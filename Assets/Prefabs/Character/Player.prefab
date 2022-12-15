@@ -1630,8 +1630,10 @@ MonoBehaviour:
   PlayerName: 
   Score: 0
   PlayerColor: {r: 0, g: 0, b: 0, a: 0}
+  Winner: 
   IsInvincibilityMode: 0
   IsDashing: 0
+  IsWinerFinded: 0
   _playerNameText: {fileID: 8612289264774511826}
   _playerScoreText: {fileID: 3744888760831468547}
   _durationInvincibilityMode: 3

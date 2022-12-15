@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace HBStudio.Test.Interface
+namespace BHStudio.Test.Interface
 {
     public interface IMoveble
     {

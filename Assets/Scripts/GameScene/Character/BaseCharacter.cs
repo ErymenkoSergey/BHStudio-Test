@@ -1,8 +1,8 @@
-using HBStudio.Test.Mechanics.NetWork;
+using BHStudio.Test.Mechanics.NetWork;
 using Mirror;
 using UnityEngine;
 
-namespace HBStudio.Test.Mechanics.Character
+namespace BHStudio.Test.Mechanics.Character
 {
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(NetworkTransform))]

@@ -2,11 +2,11 @@ using UnityEngine;
 using Mirror;
 using System.Collections;
 using TMPro;
-using HBStudio.Test.Mechanics.NetWork;
-using HBStudio.Test.Data;
-using HBStudio.Test.Interface;
+using BHStudio.Test.Mechanics.NetWork;
+using BHStudio.Test.Data;
+using BHStudio.Test.Interface;
 
-namespace HBStudio.Test.Mechanics.Character
+namespace BHStudio.Test.Mechanics.Character
 {
     public sealed class PlayerSync : BaseCharacter, IMoveble, ICharacterable
     {
@@ -43,14 +43,16 @@ namespace HBStudio.Test.Mechanics.Character
         {
             _characterController.enabled = true;
 
-            var players = SetReferences();
-            CmdSetPlayerName(players.GetName());
+            var player = SetReferences();
+            CmdSetPlayerName(player.GetName());
         }
 
-        [Client]
         private GameNetConfigurator SetReferences()
         {
             SceneObserver observer = FindObjectOfType<SceneObserver>();
+
+            if (observer == null)
+                return null;
 
             _sceneObserver = observer;
             SetData(observer.GetGameNetConfigurator().GetConfiguration());
@@ -65,7 +67,6 @@ namespace HBStudio.Test.Mechanics.Character
             return _netConfigurator;
         }
 
-        [Client]
         private void SetData(Configuration configuration)
         {
             _dashDistance = configuration.JerkDistance;
@@ -73,7 +74,6 @@ namespace HBStudio.Test.Mechanics.Character
             _winsToWin = configuration.CountWinsToWin;
         }
 
-        [Client]
         private void FixedUpdate()
         {
             if (!isOwned)
@@ -98,7 +98,6 @@ namespace HBStudio.Test.Mechanics.Character
                 SetAnimatorStatus("State", 0);
         }
 
-        [Client]
         public void SetAnimatorStatus(string name, int value)
         {
             _animator.SetInteger(name, value);
@@ -116,14 +115,6 @@ namespace HBStudio.Test.Mechanics.Character
 
             if (hit.gameObject.TryGetComponent(out ICharacterable character))
             {
-
-                //Debug.Log($"character {character.GetName()} / {character.GetIsInvincibilityMode()}");
-
-                if (character.GetIsInvincibilityMode())
-                    return;
-
-                character.CmdInvincibilityStatusOn();
-
                 if (IsDashing && isLocalPlayer && !_enemyDetected)
                 {
                     _enemyDetected = true;
@@ -137,6 +128,11 @@ namespace HBStudio.Test.Mechanics.Character
                             CmdAddScore();
                     }
                 }
+
+                if (character.GetIsInvincibilityMode())
+                    return;
+
+                character.SetInvincibilityStatusOn();
             }
         }
 
@@ -147,7 +143,6 @@ namespace HBStudio.Test.Mechanics.Character
             _enemyDetected = false;
         }
 
-        [Client]
         private IEnumerator Dash()
         {
             if (isServer)
@@ -228,21 +223,6 @@ namespace HBStudio.Test.Mechanics.Character
             PlayerName = name;
         }
 
-        [Command]
-        private void CmdSetInvincibilityMode(bool isOn)
-        {
-            SetInvincibilityMode(isOn);
-        }
-
-        [Server]
-        private void SetInvincibilityMode(bool isOn)
-        {
-            if (isOn)
-                SetColor(Color.red);
-            else
-                SetColor(Color.white);
-        }
-
         [Client]
         private void UpdatePlayerName(string oldName, string newName)
         {
@@ -281,33 +261,45 @@ namespace HBStudio.Test.Mechanics.Character
             Winner = PlayerName;
         }
 
-        public void CmdInvincibilityStatusOn()
+        public void SetInvincibilityStatusOn()
         {
             StartCoroutine(InvincibilityTimer());
-            if (!IsInvincibilityMode)
-                CmdSetColor(Color.black);
             StartCoroutine(PushAway());
         }
 
         private IEnumerator InvincibilityTimer()
         {
-            if (isServer)
-                SetInvincibilityMode(true);
-            else
-                CmdSetInvincibilityMode(true);
-
-            IsInvincibilityMode = true;
-
+            SetNewStatusInvincibility(true);
             yield return new WaitForSeconds(_durationInvincibilityMode);
-            if (isServer)
-                SetInvincibilityMode(false);
-            else
-                CmdSetInvincibilityMode(false);
-
-            IsInvincibilityMode = false;
+            SetNewStatusInvincibility(false);
         }
 
-        public IEnumerator PushAway()
+        private void SetNewStatusInvincibility(bool isOn)
+        {
+            if (isServer)
+                SetInvincibilityMode(isOn);
+            else
+                CmdSetInvincibilityMode(isOn);
+
+            IsInvincibilityMode = isOn;
+        }
+
+        [Command]
+        private void CmdSetInvincibilityMode(bool isOn)
+        {
+            SetInvincibilityMode(isOn);
+        }
+
+        [Server]
+        private void SetInvincibilityMode(bool isOn)
+        {
+            if (isOn)
+                SetColor(Color.red);
+            else
+                SetColor(Color.white);
+        }
+
+        private IEnumerator PushAway()
         {
             if (_isPushAway)
                 yield break;
@@ -354,10 +346,7 @@ namespace HBStudio.Test.Mechanics.Character
 
         public void Rotate(Vector2 vector)
         {
-            if (IsWinerFinded)
-                return;
-            
-            if (!isLocalPlayer || !isOwned)
+            if (!isLocalPlayer || !isOwned || IsWinerFinded)
                 return;
 
             RotateBody(vector);
@@ -378,10 +367,7 @@ namespace HBStudio.Test.Mechanics.Character
 
         public void Bounce()
         {
-            if (IsWinerFinded)
-                return;
-
-            if (!isLocalPlayer)
+            if (IsWinerFinded || !isLocalPlayer)
                 return;
 
             StartCoroutine(Dash());

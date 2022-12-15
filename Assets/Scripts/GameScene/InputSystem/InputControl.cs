@@ -1,5 +1,5 @@
-using HBStudio.Test.Interface;
-using HBStudio.Test.Other;
+using BHStudio.Test.Interface;
+using BHStudio.Test.Other;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -15,7 +15,7 @@ public enum Controls
     Right = 5
 }
 
-namespace HBStudio.Test.Mechanics.Inputs
+namespace BHStudio.Test.Mechanics.Inputs
 {
     public class InputControl : CommonBehaviour
     {

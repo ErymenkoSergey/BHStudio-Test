@@ -1,8 +1,8 @@
-using HBStudio.Test.Other;
+using BHStudio.Test.Other;
 using UnityEngine;
 using TMPro;
 
-namespace HBStudio.Test.UI
+namespace BHStudio.Test.UI
 {
     public class GameUI : CommonBehaviour
     {
