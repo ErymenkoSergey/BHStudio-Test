@@ -11,11 +11,13 @@ namespace HBStudio.Test.Mechanics.Character
     public sealed class PlayerSync : BaseCharacter, IMoveble, ICharacterable
     {
         [SyncVar(hook = nameof(UpdatePlayerName))] public string PlayerName;
-        [SyncVar(hook = nameof(UpdateHitCount))] public int Score = 0;
+        [SyncVar(hook = nameof(UpdateHitCount))] public int Score;
         [SyncVar(hook = nameof(UpdateColor))] public Color PlayerColor;
+        [SyncVar(hook = nameof(UpdateWinStatus))] public string Winner;
 
         [SyncVar] public bool IsInvincibilityMode;
         [SyncVar] public bool IsDashing;
+        [SyncVar] public bool IsWinerFinded;
 
         [SerializeField] private TMP_Text _playerNameText;
         [SerializeField] private TMP_Text _playerScoreText;
@@ -23,7 +25,6 @@ namespace HBStudio.Test.Mechanics.Character
         [SerializeField] private float _durationInvincibilityMode;
         [SerializeField] private float _dashDistance;
         [SerializeField] private int _winsToWin;
-
         private bool _isPushAway;
 
         [SerializeField] private float _rotationSpeed;
@@ -42,13 +43,11 @@ namespace HBStudio.Test.Mechanics.Character
         {
             _characterController.enabled = true;
 
-            if (isClient && isOwned)
-            {
-                var players = SetReferences();
-                CmdSetPlayerName(players.GetName());
-            }
+            var players = SetReferences();
+            CmdSetPlayerName(players.GetName());
         }
 
+        [Client]
         private GameNetConfigurator SetReferences()
         {
             SceneObserver observer = FindObjectOfType<SceneObserver>();
@@ -66,6 +65,7 @@ namespace HBStudio.Test.Mechanics.Character
             return _netConfigurator;
         }
 
+        [Client]
         private void SetData(Configuration configuration)
         {
             _dashDistance = configuration.JerkDistance;
@@ -73,6 +73,7 @@ namespace HBStudio.Test.Mechanics.Character
             _winsToWin = configuration.CountWinsToWin;
         }
 
+        [Client]
         private void FixedUpdate()
         {
             if (!isOwned)
@@ -97,9 +98,15 @@ namespace HBStudio.Test.Mechanics.Character
                 SetAnimatorStatus("State", 0);
         }
 
+        [Client]
         public void SetAnimatorStatus(string name, int value)
         {
             _animator.SetInteger(name, value);
+        }
+
+        public string GetName()
+        {
+            return PlayerName;
         }
 
         private void OnControllerColliderHit(ControllerColliderHit hit)
@@ -109,8 +116,13 @@ namespace HBStudio.Test.Mechanics.Character
 
             if (hit.gameObject.TryGetComponent(out ICharacterable character))
             {
+
+                //Debug.Log($"character {character.GetName()} / {character.GetIsInvincibilityMode()}");
+
                 if (character.GetIsInvincibilityMode())
                     return;
+
+                character.CmdInvincibilityStatusOn();
 
                 if (IsDashing && isLocalPlayer && !_enemyDetected)
                 {
@@ -120,30 +132,28 @@ namespace HBStudio.Test.Mechanics.Character
                     if (IsDashing)
                     {
                         if (isServer)
-                            AddHitCount();
+                            SetAddScore();
                         else
-                            CmdAddHitCount();
+                            CmdAddScore();
                     }
-
-                    character.SetInvincibilityStatusOn();
                 }
             }
         }
 
+        [Client]
         private IEnumerator CollisionTimer()
         {
             yield return new WaitForSeconds(_dashTimeDetected);
             _enemyDetected = false;
         }
 
+        [Client]
         private IEnumerator Dash()
         {
             if (isServer)
                 SetDashBool(true);
             else
                 CmdSetDashBool(true);
-
-            IsDashing = true;
 
             if (!IsInvincibilityMode)
                 CmdSetColor(Color.blue);
@@ -169,18 +179,11 @@ namespace HBStudio.Test.Mechanics.Character
                 SetDashBool(false);
             else
                 CmdSetDashBool(false);
-
-            IsDashing = false;
         }
 
         public bool GetIsInvincibilityMode()
         {
             return IsInvincibilityMode;
-        }
-
-        public string GetName()
-        {
-            return PlayerName;
         }
 
         [Server]
@@ -208,15 +211,15 @@ namespace HBStudio.Test.Mechanics.Character
         }
 
         [Server]
-        private void AddHitCount()
+        private void SetAddScore()
         {
             Score++;
         }
 
         [Command]
-        private void CmdAddHitCount()
+        private void CmdAddScore()
         {
-            AddHitCount();
+            SetAddScore();
         }
 
         [Command]
@@ -228,11 +231,6 @@ namespace HBStudio.Test.Mechanics.Character
         [Command]
         private void CmdSetInvincibilityMode(bool isOn)
         {
-            if (isOn)
-                CmdSetColor(Color.red);
-            else
-                CmdSetColor(Color.white);
-
             SetInvincibilityMode(isOn);
         }
 
@@ -245,11 +243,13 @@ namespace HBStudio.Test.Mechanics.Character
                 SetColor(Color.white);
         }
 
+        [Client]
         private void UpdatePlayerName(string oldName, string newName)
         {
             _playerNameText.text = newName;
         }
 
+        [Client]
         private void UpdateColor(Color oldColor, Color newColor)
         {
             _meshRenderer.material.color = newColor;
@@ -257,40 +257,54 @@ namespace HBStudio.Test.Mechanics.Character
             _playerScoreText.color = newColor;
         }
 
+        [Client]
+        private void UpdateWinStatus(string oldName, string newName)
+        {
+            IsWinerFinded = true;
+            _sceneObserver.Winn(newName);
+        }
+
+        [Client]
         private void UpdateHitCount(int oldScore, int newScore)
         {
             _playerScoreText.text = $"Score: {newScore}";
 
             if (newScore >= _winsToWin)
             {
-                //Debug.Log($"UpdateHitCount {_winsToWin} / {oldScore} / {newScore }");
-                //_sceneObserver.Winn(this);
+                SetWinner();
             }
         }
 
-        public void SetInvincibilityStatusOn()
+        [Server]
+        private void SetWinner()
         {
-            StartCoroutine(SetDamageStatus());
+            Winner = PlayerName;
+        }
+
+        public void CmdInvincibilityStatusOn()
+        {
+            StartCoroutine(InvincibilityTimer());
+            if (!IsInvincibilityMode)
+                CmdSetColor(Color.black);
             StartCoroutine(PushAway());
         }
 
-        private IEnumerator SetDamageStatus()
+        private IEnumerator InvincibilityTimer()
         {
-            IsInvincibilityMode = true;
-
             if (isServer)
                 SetInvincibilityMode(true);
             else
                 CmdSetInvincibilityMode(true);
 
+            IsInvincibilityMode = true;
+
             yield return new WaitForSeconds(_durationInvincibilityMode);
-
-            IsInvincibilityMode = false;
-
             if (isServer)
                 SetInvincibilityMode(false);
             else
                 CmdSetInvincibilityMode(false);
+
+            IsInvincibilityMode = false;
         }
 
         public IEnumerator PushAway()
@@ -301,7 +315,7 @@ namespace HBStudio.Test.Mechanics.Character
             var time = Time.time;
             _isPushAway = true;
 
-            while (Time.time - time < _durationInvincibilityMode / 6f)
+            while ((Time.time - time) > _durationInvincibilityMode)
             {
                 _characterController.Move(_direction);
                 yield return null;
@@ -312,6 +326,12 @@ namespace HBStudio.Test.Mechanics.Character
 
         public void Move(Controls controls, bool isOn)
         {
+            if (IsWinerFinded)
+            {
+                _verticalMoved = _horizontalMoved = 0f;
+                return;
+            }
+
             if (!isLocalPlayer)
                 return;
 
@@ -334,6 +354,9 @@ namespace HBStudio.Test.Mechanics.Character
 
         public void Rotate(Vector2 vector)
         {
+            if (IsWinerFinded)
+                return;
+            
             if (!isLocalPlayer || !isOwned)
                 return;
 
@@ -355,6 +378,9 @@ namespace HBStudio.Test.Mechanics.Character
 
         public void Bounce()
         {
+            if (IsWinerFinded)
+                return;
+
             if (!isLocalPlayer)
                 return;
 

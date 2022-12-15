@@ -3,7 +3,7 @@ namespace HBStudio.Test.Interface
     public interface ICharacterable
     {
         bool GetIsInvincibilityMode();
-        void SetInvincibilityStatusOn();
+        void CmdInvincibilityStatusOn();
         string GetName();
     }
 }

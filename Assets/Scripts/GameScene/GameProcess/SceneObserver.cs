@@ -14,7 +14,7 @@ namespace HBStudio.Test.Mechanics.NetWork
         [SerializeField] private GameNetConfigurator _netConfigurator;
         [SerializeField] private GameUI _gameUI;
         [SerializeField] private InputControl _inputControl;
-        [SerializeField] private float _timeWaitWin = 5f;
+        [SerializeField] private float _timeWaitWin = 15f;
 
         private void Awake()
         {
@@ -41,16 +41,17 @@ namespace HBStudio.Test.Mechanics.NetWork
             return _camera;
         }
 
-        public void Winn(PlayerSync myPlayer)
+        public void Winn(string myPlayer)
         {
             _gameUI.OpenPausePanel(true);
-            _gameUI.SetWinText($"{myPlayer.PlayerName} Win!");
+            _gameUI.SetWinText($"{myPlayer} Winner!");
 
             StartCoroutine(WinTimer());
         }
 
         public IEnumerator WinTimer()
         {
+            Debug.Log($"WinTimer Start, Wait: {_timeWaitWin} seconds ");
             yield return new WaitForSeconds(_timeWaitWin);
             NetworkManager.singleton.ServerChangeScene(NetworkManager.networkSceneName);
         }
